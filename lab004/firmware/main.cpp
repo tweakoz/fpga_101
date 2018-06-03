@@ -11,7 +11,7 @@ static void busy_wait(unsigned int ds)
 {
 	timer0_en_write(0);
 	timer0_reload_write(0);
-	timer0_load_write(SYSTEM_CLOCK_FREQUENCY/10*ds);
+	timer0_load_write(SYSTEM_CLOCK_FREQUENCY/10000*ds);
 	timer0_en_write(1);
 	timer0_update_value_write(1);
 	while(timer0_value_read()) timer0_update_value_write(1);
@@ -74,16 +74,17 @@ static char *get_token(char **str)
 
 static void prompt(void)
 {
-	printf("RUNTIME>");
+	printf("WUPYO>");
 }
 
 static void help(void)
 {
-	puts("Available commands:");
-	puts("help                            - this command");
-	puts("reboot                          - reboot CPU");
-	puts("display                         - display test");
-	puts("led                             - led test");
+	printf("Available commands:\n");
+	printf("help                            - this command\n");
+	printf("reboot                          - reboot CPU\n");
+	printf("display                         - display test\n");
+	printf("led                             - led test\n");
+	printf("rgb                             - rgb test\n");
 }
 
 static void reboot(void)
@@ -93,23 +94,54 @@ static void reboot(void)
 
 static void display_test(void)
 {
-	int i;
-	printf("display_test...\n");
-	for(i=0; i<6; i++) {
-		display_sel_write(i);
-		display_value_write(i);
-		display_write_write(1);
+
+	printf("display_test yo...\n");
+
+	for( int j=0; j<=0xffffffff; j++ )
+	{		
+		int x = j;
+		for(int i=0; i<8; i++) {
+			int y = x&0xf;
+			display_sel_write(7-i);
+			display_value_write(y);
+			display_write_write(100);
+			x >>= 4;
+		}
 	}
 }
 
 static void led_test(void)
 {
-	int i;
-	printf("led_test...\n");
-	for(i=0; i<32; i++) {
-		leds_out_write(i);
-		busy_wait(1);
-	}
+	printf("led_test yo...\n");
+	for( int j=0; j<10; j++ )
+		for(int i=0; i<65536; i++) {
+			leds_out_write(i);
+			busy_wait(1);
+		}
+}
+
+static void rgb_test(void)
+{
+	rgbled_r_enable_write(1);
+	rgbled_g_enable_write(1);
+	rgbled_b_enable_write(1);
+
+	rgbled_r_period_write(256);
+	rgbled_g_period_write(256);
+	rgbled_b_period_write(256);
+
+	auto l = [](int i){
+		rgbled_r_width_write( (i>>14) & 0xff);
+		rgbled_g_width_write( (i>>15) & 0xff);
+		rgbled_b_width_write( (i>>20) & 0xff);
+	};
+
+	for( int i=0; i<(1<<26); i++ )
+		l(i);
+
+	rgbled_r_enable_write(0);
+	rgbled_g_enable_write(0);
+	rgbled_b_enable_write(0);
 }
 
 static void console_service(void)
@@ -128,6 +160,9 @@ static void console_service(void)
 		display_test();
 	else if(strcmp(token, "led") == 0)
 		led_test();
+	else if(strcmp(token, "rgb") == 0)
+		rgb_test();
+
 	prompt();
 }
 
@@ -137,9 +172,11 @@ int main(void)
 	irq_setie(1);
 	uart_init();
 
-	puts("\nLab004 - CPU testing software built "__DATE__" "__TIME__"\n");
+	printf("\nLab004 - CPU testing software built "__DATE__" "__TIME__"\n");
 	help();
 	prompt();
+
+
 
 	while(1) {
 		console_service();

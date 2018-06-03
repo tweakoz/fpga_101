@@ -25,11 +25,11 @@ firmware.elf: $(OBJECTS)
 		-lbase-nofloat -lcompiler_rt
 	chmod -x $@
 
-main.o: main.c
-	$(compile)
+main.o: main.cpp
+	$(compilexx)
 
-%.o: %.c
-	$(compile)
+%.o: %.cpp
+	$(compilexx)
 
 %.o: %.S
 	$(assemble)
