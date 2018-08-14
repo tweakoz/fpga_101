@@ -11,7 +11,7 @@ from litex.soc.integration.builder import *
 from litex.soc.cores import dna, xadc
 from litex.soc.cores.spi import SPIMaster
 
-from ios import Led, RGBLed, Button, Switch
+from ios import Led, RGBLed, Button, Switch, Counter
 from display import Display
 
 #
@@ -58,6 +58,15 @@ _io = [
     ("user_btn", 2, Pins("F15"), IOStandard("LVCMOS33")),
     ("user_btn", 3, Pins("V10"), IOStandard("LVCMOS33")),
     ("user_btn", 4, Pins("E16"), IOStandard("LVCMOS33")),
+
+    ("counter", 0, Pins("B13"), IOStandard("LVCMOS33")),
+    ("counter", 1, Pins("F14"), IOStandard("LVCMOS33")),
+    ("counter", 2, Pins("D17"), IOStandard("LVCMOS33")),
+    ("counter", 3, Pins("E17"), IOStandard("LVCMOS33")),
+    ("counter", 4, Pins("G13"), IOStandard("LVCMOS33")),
+    ("counter", 5, Pins("C17"), IOStandard("LVCMOS33")),
+    ("counter", 6, Pins("D18"), IOStandard("LVCMOS33")),
+    ("counter", 7, Pins("E18"), IOStandard("LVCMOS33")),
 
     ("user_rgb_led", 0,
         Subsignal("r", Pins("K6")),
@@ -122,6 +131,7 @@ class BaseSoC(SoCCore):
         "rgbled",
         "leds",
         "switches",
+        "counter",
         "buttons",
         "adxl362",
         "display"
@@ -154,6 +164,10 @@ class BaseSoC(SoCCore):
         # Switches
         user_switches = Cat(*[platform.request("user_sw", i) for i in range(16)])
         self.submodules.switches = Switch(user_switches)
+
+        # Counter
+        user_counter = Cat(*[platform.request("counter", i) for i in range(8)])
+        self.submodules.counter = Counter(user_counter)
 
         # Buttons
         user_buttons = Cat(*[platform.request("user_btn", i) for i in range(5)])

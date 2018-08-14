@@ -20,5 +20,8 @@ class RGBLed(Module, AutoCSR):
 class Button(gpio.GPIOIn):
     pass
 
+class Counter(gpio.GPIOIn):
+    pass
+
 class Switch(gpio.GPIOIn):
     pass

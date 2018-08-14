@@ -22,7 +22,7 @@ static char *readstr(void)
 {
 	char c[2];
 	static char s[64];
-	static int ptr = 0;
+	static unsigned int ptr = 0;
 
 	if(readchar_nonblock()) {
 		c[0] = readchar();
@@ -85,6 +85,7 @@ static void help(void)
 	printf("display                         - display test\n");
 	printf("led                             - led test\n");
 	printf("rgb                             - rgb test\n");
+	printf("count                           - gpio inp counter\n");
 }
 
 static void reboot(void)
@@ -97,7 +98,7 @@ static void display_test(void)
 
 	printf("display_test yo...\n");
 
-	for( int j=0; j<=0xffffffff; j++ )
+	for( unsigned int j=0; j<=0xffffffff; j++ )
 	{		
 		int x = j;
 		for(int i=0; i<8; i++) {
@@ -118,6 +119,67 @@ static void led_test(void)
 			leds_out_write(i);
 			busy_wait(1);
 		}
+}
+
+static void count(void)
+{
+	bool prev[8] = { false,false,false,false, false,false,false,false };
+	unsigned int num_changes[8] = {0,0,0,0, 0,0,0,0};
+
+	while(true)
+	{
+		/////////////////////////////////
+		// reload 1 second on countdown timer
+		/////////////////////////////////
+
+		timer0_en_write(0);
+		timer0_reload_write(0);
+		timer0_load_write(SYSTEM_CLOCK_FREQUENCY); // 1HZ
+		timer0_en_write(1);
+		timer0_update_value_write(1);
+		timer_reload = false;
+
+		/////////////////////////////////
+		// until 1 second...
+		/////////////////////////////////
+
+		while(timer0_value_read()){
+
+			timer0_update_value_write(1);
+
+			/////////////////////////////////
+			// count bit changes 
+			/////////////////////////////////
+
+			char ch = counter_in_read();
+
+			for( int i=0; i<8; i++ )
+			{
+				bool bit = ch&(1<<i);
+
+				if( bit != prev[i] )
+					(num_changes[i])++;
+
+				prev[i] = bit;
+
+			}
+		}
+
+		/////////////////////////////////
+		// report..
+		/////////////////////////////////
+
+		printf( "////////////////\n");
+		printf( "// change report\n");
+		printf( "////////////////\n");
+
+		for( int i=0; i<8; i++ ){
+			printf( "changes/sec bit<%d> -> <%d>\n", i, num_changes[i] );
+			num_changes[i] = 0;
+		}
+
+		printf( "\n");
+	}
 }
 
 static void rgb_test(void)
@@ -162,6 +224,8 @@ static void console_service(void)
 		led_test();
 	else if(strcmp(token, "rgb") == 0)
 		rgb_test();
+	else if(strcmp(token, "count") == 0)
+		count();
 
 	prompt();
 }
@@ -172,7 +236,7 @@ int main(void)
 	irq_setie(1);
 	uart_init();
 
-	printf("\nLab004 - CPU testing software built "__DATE__" "__TIME__"\n");
+	printf("\nLab004 - CPU testing software built " __DATE__ " " __TIME__ "\n");
 	help();
 	prompt();
 
