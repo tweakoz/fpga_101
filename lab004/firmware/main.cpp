@@ -174,6 +174,10 @@ static void count(void)
 
 		for( int i=0; i<8; i++ ){
 			printf( "changes/sec bit<%d> -> <%d>\n", i, num_changes[i] );
+			display_sel_write(i);
+			display_value_write(num_changes[i]);
+			display_write_write(100);
+
 			num_changes[i] = 0;
 		}
 
