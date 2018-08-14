@@ -137,7 +137,6 @@ static void count(void)
 		timer0_load_write(SYSTEM_CLOCK_FREQUENCY); // 1HZ
 		timer0_en_write(1);
 		timer0_update_value_write(1);
-		timer_reload = false;
 
 		/////////////////////////////////
 		// until 1 second...
